@@ -143,7 +143,7 @@ server <- function(input, output, session) {
     if (mode == "weeks") {
       if (is_numeric_like(s)) {
         wk <- as.integer(as.numeric(s))
-        return(list(week = wk, issue = NULL, kind = "week"))
+        return(list(week = as.integer(wk), issue = NULL, kind = "week"))
       }
       return(list(week = NA_integer_, issue = "Expected ISO week number (Weeks only).", kind = "invalid"))
     }
@@ -169,7 +169,7 @@ server <- function(input, output, session) {
     if (iso_y != selected_year) {
       return(list(week = NA_integer_, issue = sprintf("Date is ISO-year %d (selected %d).", iso_y, selected_year), kind = "date"))
     }
-    list(week = isoweek(d), issue = NULL, kind = "date")
+    list(week = as.integer(isoweek(d)), issue = NULL, kind = "date")
   }
   
   format_label <- function(name, auto_wrap, width, allow_wrap = TRUE) {
@@ -278,6 +278,8 @@ server <- function(input, output, session) {
     start_parsed <- lapply(raw$date_raw, parse_week_or_date_one, selected_year = year, mode = mode)
     start_week <- vapply(start_parsed, `[[`, integer(1), "week")
     start_issue <- vapply(start_parsed, function(z) if (is.null(z$issue)) "" else z$issue, character(1))
+    missing_start <- is.na(start_week) & (is.na(raw$date_raw) | trimws(raw$date_raw) == "")
+    start_issue[missing_start] <- "Missing start date/week."
     
     # Parse end weeks
     end_parsed <- lapply(raw$end_raw, parse_week_or_date_one, selected_year = year, mode = mode)
