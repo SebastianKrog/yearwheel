@@ -1,0 +1,42 @@
+category,date,end_date,duration_weeks,name,color
+activity,12,,,Panum,darkgreen
+activity,24,,,Summer,darkgreen
+activity,34,,,Retreat,darkgreen
+activity,37,,,Panum,darkgreen
+activity,46,,,X-mas,darkgreen
+activity,2,,,Q4 Report,lightred
+activity,8,,,Budget,lightred
+activity,15,,,Q1 Report,lightred
+activity,28,,,Q2 Report,lightred
+activity,41,,,Q3 Report,lightred
+funding,6,,,Interne Midler,darkyellow
+funding,11,,,DCCC,darkyellow
+funding,17,,,DFF skolar,darkyellow
+funding,18,,,DFF 1,darkyellow
+funding,21,,,KB postdoc/skolar,darkyellow
+funding,22,,,DCCC,darkyellow
+funding,34,,,NEYE,darkyellow
+funding,35,,,Interne Midler,darkyellow
+funding,41,,,DFF 2,darkyellow
+funding,42,,,KB skolar,darkyellow
+funding,46,,,DCCC,darkyellow
+funding,2,5.0,,KB,darkyellow
+funding,2,5.0,,Knæk Cancer,darkyellow
+funding,2,5.0,,Novo Nordisk,darkyellow
+conference,3,,,Nordic SBRT,darkpurple
+conference,9,,,ØW,darkpurple
+conference,18,,,ESTRO,darkpurple
+conference,43,,,DCCC-RT,darkpurple
+conference,39,,,DCCC-RT abstract,midpurple
+conference,46,,,ESTRO abstract,midpurple
+conference,51,,,ØW abstract,midpurple
+conference,14,,,DSKO,darkblue
+conference,21,,,DSMF,darkblue
+conference,25,,,BiGART,darkblue
+conference,35,,,DKFD,darkblue
+conference,40,,,RTT landsmøde,darkblue
+conference,45,,,Herlev symposie,darkblue
+conference,6,,,DSKO abstract,midblue
+conference,11,,,BiGART abstract,midblue
+conference,13,,,DKFD abstract,midblue
+conference,19,,,DKFD tilmelding,midblue
