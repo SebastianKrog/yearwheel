@@ -248,6 +248,8 @@ server <- function(input, output, session) {
         duration_weeks = integer(),
         week = integer(),
         end_week = integer(),
+        start_kind = character(),
+        end_kind = character(),
         issue = character()
       ))
     }
@@ -286,6 +288,14 @@ server <- function(input, output, session) {
     end_week <- vapply(end_parsed, `[[`, integer(1), "week")
     end_issue <- vapply(end_parsed, function(z) if (is.null(z$issue)) "" else z$issue, character(1))
     
+    get_kind <- function(z) {
+      k <- z$kind
+      if (is.null(k) || is.na(k)) "" else as.character(k)
+    }
+    
+    start_kind <- vapply(start_parsed, get_kind, character(1))
+    end_kind   <- vapply(end_parsed,   get_kind, character(1))
+    
     # Derive end_week from duration_weeks if missing
     end_week_derived <- end_week
     needs_dur <- is.na(end_week_derived) & !is.na(start_week) & !is.na(raw$duration_weeks)
@@ -316,6 +326,8 @@ server <- function(input, output, session) {
         duration_weeks,
         week = start_week,
         end_week = end_week_derived,
+        start_kind = start_kind,
+        end_kind = end_kind,
         issue
       )
   })
@@ -331,10 +343,37 @@ server <- function(input, output, session) {
                            ifelse(is.na(end_raw), "", end_raw),
                            ifelse(is.na(duration_weeks), "", duration_weeks)))
     ok_n <- sum(is.na(ev$issue) | ev$issue == "")
-    out <- c(
-      sprintf("Parsed rows: %d OK, %d with issues.", ok_n, nrow(problems))
-    )
+    
+    # Warn on collisions when at least one row came from a DATE (date/date or date/week).
+    # Pure week/week duplicates are considered intentional and are not warned.
+    collisions <- ev %>%
+      filter((is.na(issue) | issue == ""), !is.na(week)) %>%
+      group_by(category, week) %>%
+      summarise(
+        n = dplyr::n(),
+        any_date = any(start_kind == "date"),
+        kinds = paste(start_kind, collapse = ","),
+        inputs = paste(date_raw, collapse = ", "),
+        details = paste0(
+          "row ", row_id, " \"", name, "\" input=", date_raw, " (", start_kind, ")",
+          collapse = " | "
+        ),
+        .groups = "drop"
+      ) %>%
+      filter(n > 1, any_date) %>%   # <-- key change: only warn if at least one is date-derived
+      arrange(category, week)
+    
+    collision_msgs <- character()
+    if (nrow(collisions) > 0) {
+      collision_msgs <- sprintf(
+        "WARNING: Week collision involving date-derived input (combined into one slice): category=%s week=%d. Inputs: %s. Details: %s",
+        collisions$category, collisions$week, collisions$inputs, collisions$details
+      )
+    }
+    
+    out <- c(sprintf("Parsed rows: %d OK, %d with issues.", ok_n, nrow(problems)))
     if (nrow(problems)) out <- c(out, problems$msg)
+    if (length(collision_msgs)) out <- c(out, collision_msgs)
     paste(out, collapse = "\n")
   })
   
@@ -567,6 +606,18 @@ server <- function(input, output, session) {
       "\\definecolor{brightred}{RGB}{220,53,69}\n",
       "\\definecolor{white}{RGB}{255 255 255}\n",
       "\\definecolor{labelgray}{RGB}{102,102,102}\n\n",
+      "\\definecolor{mJan}{RGB}{0,102,153}\n",
+      "\\definecolor{mFeb}{RGB}{0,153,204}\n",
+      "\\definecolor{mMar}{RGB}{0,153,102}\n",
+      "\\definecolor{mApr}{RGB}{102,153,0}\n",
+      "\\definecolor{mMay}{RGB}{204,153,0}\n",
+      "\\definecolor{mJun}{RGB}{204,102,0}\n",
+      "\\definecolor{mJul}{RGB}{153,51,51}\n",
+      "\\definecolor{mAug}{RGB}{204,51,102}\n",
+      "\\definecolor{mSep}{RGB}{153,102,204}\n",
+      "\\definecolor{mOct}{RGB}{88,147,193}\n",
+      "\\definecolor{mNov}{RGB}{90,90,90}\n",
+      "\\definecolor{mDec}{RGB}{0,128,128}\n\n",
       "\\def\\MonthGap{2}\n",
       "\\pgfmathsetmacro{\\TotalDeg}{360 - \\MonthGap}\n",
       "\\pgfmathsetmacro{\\StartAng}{450 - \\MonthGap/2}\n",
@@ -622,12 +673,25 @@ server <- function(input, output, session) {
     months_ring <- paste0(
       "\\wheelchart[\n",
       "  arc data=\\WCvarA,\n",
+      "  arc data style={text color=white},\n",
       "  radius={10.6}{11.1},\n",
       "  gap polar=-4,\n",
       "  gap radius=0.02,\n",
       "  middle={\\fontsize{48}{60}\\selectfont", latex_escape(input$center_year), "},\n",
       "  slices arrow={1}{0},\n",
-      "  slices style={fill=none,draw=lightgray}\n",
+      "  slices style={draw=lightgray},\n",
+      "  slices style{1} ={fill=mJan},\n",
+      "  slices style{2} ={fill=mFeb},\n",
+      "  slices style{3} ={fill=mMar},\n",
+      "  slices style{4} ={fill=mApr},\n",
+      "  slices style{5} ={fill=mMay},\n",
+      "  slices style{6} ={fill=mJun},\n",
+      "  slices style{7} ={fill=mJul},\n",
+      "  slices style{8} ={fill=mAug},\n",
+      "  slices style{9} ={fill=mSep},\n",
+      "  slices style{10}={fill=mOct},\n",
+      "  slices style{11}={fill=mNov},\n",
+      "  slices style{12}={fill=mDec}\n",
       "]{", months_txt, "}\n"
     )
     
